@@ -17,28 +17,42 @@ from pathlib import Path
 import requests
 
 # ---- Edit these ----------------------------------------------------------
-INCLUDE = [
+# STRONG words: a job whose TITLE has one of these is a match.
+STRONG = [
     "automation", "automate", "n8n", "zapier", "make.com", "workflow",
-    "no-code", "no code", "low-code", "low code", "rpa", "integration",
+    "no-code", "no code", "low-code", "low code", "rpa", "ai agent",
     "data analyst", "data analysis", "data analytics", "business analyst",
-    "bi analyst", "bi developer", "power bi", "reporting analyst",
-    "operations analyst", "python", "sql", "ai agent", "ai automation",
-    "prompt engineer",
-    # admin and operations
-    "administrator", "admin", "operations", "coordinator", "office",
-    "virtual assistant", "executive assistant", "data entry", "back office",
-    # IT and customer support
+    "bi analyst", "power bi", "reporting analyst", "operations analyst",
     "it support", "technical support", "tech support", "help desk",
-    "helpdesk", "service desk", "support specialist", "support engineer",
-    "support agent", "customer support", "customer service",
-    "customer success", "client support",
-    # banking and finance background
-    "banking", "bank ", "fintech", "payments", "kyc", "compliance",
-    "reconciliation", "bookkeeper",
+    "helpdesk", "service desk", "support specialist", "support agent",
+    "customer support", "customer service", "customer success",
+    "virtual assistant", "data entry",
 ]
+
+# WEAK words: only a match if the title ALSO has one of the ROLE words below.
+WEAK = [
+    "python", "sql", "operations", "admin", "administrator", "coordinator",
+    "office", "back office", "banking", "bank ", "fintech", "payments",
+    "kyc", "compliance", "reconciliation", "bookkeeper", "integration",
+]
+ROLE = [
+    "analyst", "specialist", "associate", "assistant", "coordinator",
+    "administrator", "clerk", "support", "junior", "entry", "intern",
+    "trainee", "officer", "representative", "agent",
+]
+
+# Any of these words in the TITLE removes the job.
 EXCLUDE = [
+    # too senior
     "senior", "sr.", "sr ", "lead", "principal", "staff", "director",
-    "head of", "vp ", "manager", "architect",
+    "head of", "vp ", "manager", "architect", "chief",
+    # other kinds of jobs
+    "software engineer", "backend", "back-end", "frontend", "front-end",
+    "full stack", "full-stack", "devops", "sre", "machine learning",
+    "ml engineer", "data scientist", "data engineer", "security engineer",
+    "cloud engineer", "mobile", "ios", "android", "sales", "recruiter",
+    "marketing", "designer", "nurse", "teacher", "tutor", "attorney",
+    "lawyer", "accountant", "physician", "driver",
 ]
 MAX_PER_DIGEST = 40
 # --------------------------------------------------------------------------
@@ -183,11 +197,20 @@ def fetch_workingnomads():
     return jobs
 
 
-def matches(job):
-    text = f"{job['title']} {job['tags']}".lower()
-    if any(x in text for x in EXCLUDE):
-        return False
-    return any(re.search(r"\b" + re.escape(k), text) for k in INCLUDE)
+def has_word(text, words):
+    return any(re.search(r"\b" + re.escape(w), text) for w in words)
+
+
+def score(job):
+    """2 = strong match, 1 = weak match with a role word, 0 = no match."""
+    title = job["title"].lower()
+    if has_word(title, EXCLUDE):
+        return 0
+    if has_word(title, STRONG):
+        return 2
+    if has_word(title, WEAK) and has_word(title, ROLE):
+        return 1
+    return 0
 
 
 def load_seen():
@@ -224,9 +247,12 @@ def main():
     new, urls_this_run = [], set()
     for job in all_jobs:
         url = job["url"]
-        if url and url not in seen and url not in urls_this_run and matches(job):
-            new.append(job)
-            urls_this_run.add(url)
+        if url and url not in seen and url not in urls_this_run:
+            job["score"] = score(job)
+            if job["score"] > 0:
+                new.append(job)
+                urls_this_run.add(url)
+    new.sort(key=lambda j: -j["score"])  # best matches first
 
     print(f"{len(all_jobs)} fetched, {len(new)} new matches")
     if new:
