@@ -15,9 +15,8 @@ from pathlib import Path
 import requests
 
 # ---- Edit these ----------------------------------------------------------
-INCLUDE = ["designer", "design", "frontend", "front-end", "front end", "react",
-           "javascript", "animator", "animation", "motion", "ui", "ux",
-           "web developer", "developer"]
+INCLUDE = ["automation engineer", "data analyst", "artificial intelligence", "workflow automation", "python", "powerBi", "animation",
+           "customer service", "administrator"]
 EXCLUDE = ["senior director", "vp ", "head of", "principal", "staff "]
 MAX_PER_DIGEST = 30
 # --------------------------------------------------------------------------
