@@ -16,7 +16,7 @@ import requests
 
 # ---- Edit these ----------------------------------------------------------
 INCLUDE = ["automation engineer", "data analyst", "artificial intelligence", "workflow automation", "python", "powerBi", "animation",
-           "customer service", "administrator", "MIS Analyst", "Financial Analyst", "Workflow Automation Specialist", "Junior Automation Engineer","Business Process Automation Analyst", "AI Automation Specialist","IT Support Specialist", "Data Analyst – Junior"]
+           "customer service", "administrator", "MIS Analyst", "Financial Analyst", "Workflow Automation Specialist", "Junior Automation Engineer","Business Process Automation Analyst", "AI Automation Specialist","IT Support Specialist", "Data Analyst Junior"]
 EXCLUDE = ["senior director", "vp ", "head of", "principal", "staff "]
 MAX_PER_DIGEST = 30
 # --------------------------------------------------------------------------
